@@ -1,44 +1,63 @@
 import express from "express";
-import cors from "cors";
+import mongoose from "mongoose";
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
 
-let products = [];
+// 🔥 MONGODB CONNECTION
+mongoose.connect("mongodb+srv://admin:ghing1998@cluster0.pnekrww.mongodb.net/inventory")
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log("MongoDB Error:", err));
 
-app.get("/", (req, res) => {
-  res.send("API WORKING");
+
+// 🔥 PRODUCT MODEL
+const productSchema = new mongoose.Schema({
+  name: String,
+  stock: Number,
+  shop: String
 });
 
-// GET PRODUCTS
-app.get("/api/products", (req, res) => {
-  res.json(products);
+const Product = mongoose.model("Product", productSchema);
+
+
+// 🔥 GET ALL PRODUCTS
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ADD PRODUCT
-app.post("/api/products", (req, res) => {
-  const newProduct = {
-    id: Date.now(),
-    name: req.body.name,
-    stock: req.body.stock,
-    shop: req.body.shop
-  };
 
-  products.push(newProduct);
-  res.json(newProduct);
+// 🔥 ADD PRODUCT
+app.post("/api/products", async (req, res) => {
+  try {
+    const newProduct = await Product.create(req.body);
+    res.json(newProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// DELETE PRODUCT
-app.delete("/api/products/:id", (req, res) => {
-  const id = Number(req.params.id);
-  products = products.filter(p => p.id !== id);
-  res.json({ message: "Deleted" });
+
+// 🔥 DELETE ALL PRODUCTS (OPTIONAL RESET)
+app.delete("/api/products", async (req, res) => {
+  try {
+    await Product.deleteMany({});
+    res.json({ message: "All products deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-const PORT = process.env.PORT || 8080;
+
+// 🔥 SERVER START
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Server running on " + PORT);
+  console.log("Server running on port " + PORT);
+});
 });
