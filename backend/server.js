@@ -1,27 +1,23 @@
-import express from "express";
-import mongoose from "mongoose";
+const express = require("express");
+const mongoose = require("mongoose");
 
 const app = express();
 
 app.use(express.json());
 
-// 🔥 MONGODB CONNECTION
+// MongoDB
 mongoose.connect("mongodb+srv://admin:ghing1998@cluster0.pnekrww.mongodb.net/inventory")
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log("MongoDB Error:", err));
 
-
-// 🔥 PRODUCT MODEL
-const productSchema = new mongoose.Schema({
+// Model
+const Product = mongoose.model("Product", {
   name: String,
   stock: Number,
   shop: String
 });
 
-const Product = mongoose.model("Product", productSchema);
-
-
-// 🔥 GET ALL PRODUCTS
+// GET
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find();
@@ -31,33 +27,25 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-
-// 🔥 ADD PRODUCT
+// POST
 app.post("/api/products", async (req, res) => {
   try {
-    const newProduct = await Product.create(req.body);
-    res.json(newProduct);
+    const product = await Product.create(req.body);
+    res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-
-// 🔥 DELETE ALL PRODUCTS (OPTIONAL RESET)
+// DELETE ALL (optional)
 app.delete("/api/products", async (req, res) => {
-  try {
-    await Product.deleteMany({});
-    res.json({ message: "All products deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  await Product.deleteMany({});
+  res.json({ message: "Deleted all products" });
 });
 
-
-// 🔥 SERVER START
+// PORT
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+  console.log("Server running on " + PORT);
 });
