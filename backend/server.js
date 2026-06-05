@@ -4,33 +4,51 @@ import mongoose from "mongoose";
 const app = express();
 app.use(express.json());
 
-// MongoDB
-mongoose.connect("mongodb+srv://admin:ghing1998@cluster0.pnekrww.mongodb.net/inventory")
+// 🔥 MONGODB CONNECTION (SAFE FOR RAILWAY)
+mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log("Mongo Error:", err));
 
-// Model
+// 🔥 PRODUCT MODEL
 const Product = mongoose.model("Product", {
   name: String,
   stock: Number,
   shop: String
 });
 
-// GET
+// 🔥 GET ALL PRODUCTS
 app.get("/api/products", async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST
+// 🔥 ADD PRODUCT
 app.post("/api/products", async (req, res) => {
-  const product = await Product.create(req.body);
-  res.json(product);
+  try {
+    const product = await Product.create(req.body);
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// PORT
+// 🔥 DELETE ALL PRODUCTS (OPTIONAL RESET)
+app.delete("/api/products", async (req, res) => {
+  try {
+    await Product.deleteMany({});
+    res.json({ message: "All products deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔥 START SERVER
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log("Server running on " + PORT);
+  console.log("Server running on port " + PORT);
 });
