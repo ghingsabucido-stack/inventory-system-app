@@ -12,28 +12,44 @@
   <input id="shop" placeholder="Shop">
   <button onclick="addProduct()">Add</button>
 
-  <h2>Products</h2>
+  <h2>Products (<span id="count">0</span>)</h2>
   <ul id="list"></ul>
 
 <script>
 const API = "https://inventory-system-app-production-b805.up.railway.app";
 
+
 // LOAD PRODUCTS
 async function loadProducts() {
-  const res = await fetch(API + "/api/products");
-  const data = await res.json();
+  try {
+    const res = await fetch(API + "/api/products");
+    const data = await res.json();
 
-  document.getElementById("list").innerHTML =
-    data.map(p =>
-      `<li>${p.name} - ${p.stock} (${p.shop})</li>`
-    ).join("");
+    document.getElementById("count").innerText = data.length;
+
+    document.getElementById("list").innerHTML =
+      data.map(p =>
+        `<li>${p.name} - ${p.stock} (${p.shop})</li>`
+      ).join("");
+
+  } catch (err) {
+    console.error("Error loading products:", err);
+    document.getElementById("list").innerHTML =
+      "<li>Failed to load products</li>";
+  }
 }
+
 
 // ADD PRODUCT
 async function addProduct() {
-  const name = document.getElementById("name").value;
-  const stock = document.getElementById("stock").value;
-  const shop = document.getElementById("shop").value;
+  const name = document.getElementById("name").value.trim();
+  const stock = document.getElementById("stock").value.trim();
+  const shop = document.getElementById("shop").value.trim();
+
+  if (!name || !stock || !shop) {
+    alert("Please fill all fields!");
+    return;
+  }
 
   await fetch(API + "/api/products", {
     method: "POST",
@@ -41,9 +57,17 @@ async function addProduct() {
     body: JSON.stringify({ name, stock, shop })
   });
 
+  // refresh list
   loadProducts();
+
+  // clear inputs
+  document.getElementById("name").value = "";
+  document.getElementById("stock").value = "";
+  document.getElementById("shop").value = "";
 }
 
+
+// initial load
 loadProducts();
 </script>
 
