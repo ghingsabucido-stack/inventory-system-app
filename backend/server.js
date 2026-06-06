@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 const app = express();
 app.use(express.json());
 
-// 🔥 MONGODB CONNECTION (SAFE FOR RAILWAY)
+// 🔥 MONGODB CONNECTION
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log("Mongo Error:", err));
@@ -14,6 +14,11 @@ const Product = mongoose.model("Product", {
   name: String,
   stock: Number,
   shop: String
+});
+
+// 🔥 ROOT ROUTE
+app.get("/", (req, res) => {
+  res.send("Inventory API is running");
 });
 
 // 🔥 GET ALL PRODUCTS
@@ -36,7 +41,7 @@ app.post("/api/products", async (req, res) => {
   }
 });
 
-// 🔥 DELETE ALL PRODUCTS (OPTIONAL RESET)
+// 🔥 DELETE ALL PRODUCTS
 app.delete("/api/products", async (req, res) => {
   try {
     await Product.deleteMany({});
