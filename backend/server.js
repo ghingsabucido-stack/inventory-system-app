@@ -1,123 +1,61 @@
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
-// =======================
-// 🔥 MONGODB CONNECTION
-// =======================
+// MongoDB connect
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log("Mongo Error:", err));
+  .catch(err => console.log(err));
 
-// =======================
-// 🔥 PRODUCT MODEL (FIXED)
-// =======================
+// Schema
 const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  stock: { type: Number, required: true, default: 0 },
-  shop: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  name: String,
+  stock: Number,
+  price: Number,
 });
 
 const Product = mongoose.model("Product", productSchema);
 
-// =======================
-// 🔥 ROOT ROUTE
-// =======================
+// HOME TEST
 app.get("/", (req, res) => {
-  res.send("Inventory API is running");
+  res.send("API WORKING");
 });
 
-// =======================
-// 🔥 GET ALL PRODUCTS
-// =======================
+// GET products
 app.get("/api/products", async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const products = await Product.find();
+  res.json(products);
 });
 
-// =======================
-// 🔥 GET SINGLE PRODUCT
-// =======================
-app.get("/api/products/:id", async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// =======================
-// 🔥 GET BY SHOP
-// =======================
-app.get("/api/products/shop/:shopName", async (req, res) => {
-  try {
-    const products = await Product.find({ shop: req.params.shopName });
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// =======================
-// 🔥 ADD PRODUCT
-// =======================
+// ADD product
 app.post("/api/products", async (req, res) => {
-  try {
-    const product = await Product.create(req.body);
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const product = new Product(req.body);
+  await product.save();
+  res.json(product);
 });
 
-// =======================
-// 🔥 UPDATE STOCK ONLY
-// =======================
-app.patch("/api/products/:id/stock", async (req, res) => {
-  try {
-    const { stock } = req.body;
-
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { stock },
-      { new: true }
-    );
-
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// UPDATE product
+app.put("/api/products/:id", async (req, res) => {
+  const updated = await Product.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
+  res.json(updated);
 });
 
-// =======================
-// 🔥 DELETE ALL PRODUCTS
-// =======================
-app.delete("/api/products", async (req, res) => {
-  try {
-    await Product.deleteMany({});
-    res.json({ message: "All products deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// DELETE product
+app.delete("/api/products/:id", async (req, res) => {
+  await Product.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
 });
 
-// =======================
-// 🔥 START SERVER
-// =======================
-const PORT = process.env.PORT || 8080;
+export default app;
 
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
