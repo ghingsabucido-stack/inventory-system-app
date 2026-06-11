@@ -2,6 +2,192 @@
 <html>
 <head>
   <title>Inventory System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    input {
+      padding: 8px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    .delete-btn {
+      background: red;
+      color: white;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📦 Inventory System</h1>
+
+  <input id="name" placeholder="Product Name">
+  <input id="stock" type="number" placeholder="Stock">
+  <input id="shop" placeholder="Shop">
+
+  <button onclick="addProduct()">Add Product</button>
+
+  <br><br>
+
+  <input
+    id="search"
+    placeholder="Search Product"
+    onkeyup="loadProducts()"
+  >
+
+  <h2>
+    Products (<span id="count">0</span>)
+  </h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Stock</th>
+        <th>Shop</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody id="list"></tbody>
+  </table>
+
+<script>
+
+const API = "https://inventory-system-app-six.vercel.app";
+
+// LOAD PRODUCTS
+async function loadProducts() {
+
+  try {
+
+    const res = await fetch(API + "/api/products");
+    const data = await res.json();
+
+    const keyword =
+      document.getElementById("search").value.toLowerCase();
+
+    const filtered = data.filter(p =>
+      p.name.toLowerCase().includes(keyword)
+    );
+
+    document.getElementById("count").innerText =
+      filtered.length;
+
+    document.getElementById("list").innerHTML =
+      filtered.map(p => `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.stock}</td>
+          <td>${p.shop || "-"}</td>
+          <td>
+            <button
+              class="delete-btn"
+              onclick="deleteProduct('${p._id}')">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `).join("");
+
+  } catch (err) {
+
+    console.error(err);
+
+    document.getElementById("list").innerHTML =
+      `<tr>
+        <td colspan="4">
+          Failed to load products
+        </td>
+      </tr>`;
+  }
+}
+
+
+// ADD PRODUCT
+async function addProduct() {
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const stock =
+    document.getElementById("stock").value.trim();
+
+  const shop =
+    document.getElementById("shop").value.trim();
+
+  if (!name || !stock || !shop) {
+    alert("Please fill all fields.");
+    return;
+  }
+
+  await fetch(API + "/api/products", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name,
+      stock: Number(stock),
+      shop
+    })
+  });
+
+  document.getElementById("name").value = "";
+  document.getElementById("stock").value = "";
+  document.getElementById("shop").value = "";
+
+  loadProducts();
+}
+
+
+// DELETE PRODUCT
+async function deleteProduct(id) {
+
+  if (!confirm("Delete this product?")) return;
+
+  await fetch(API + "/api/products/" + id, {
+    method: "DELETE"
+  });
+
+  loadProducts();
+}
+
+
+// INITIAL LOAD
+loadProducts();
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+  <title>Inventory System</title>
 </head>
 <body>
 
